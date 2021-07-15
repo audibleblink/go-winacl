@@ -6,11 +6,12 @@ import (
 	"fmt"
 )
 
+// NewAce is a constructor that will parse out an Ace from a byte buffer
 func NewAce(buf *bytes.Buffer) ACE {
 	ace := ACE{}
 
 	ace.Header = NewACEHeader(buf)
-	binary.Read(buf, binary.LittleEndian, &ace.AccessMask)
+	binary.Read(buf, binary.LittleEndian, &ace.AccessMask.value)
 	switch ace.Header.Type {
 	case AceTypeAccessAllowed, AceTypeAccessDenied, AceTypeSystemAudit, AceTypeSystemAlarm, AceTypeAccessAllowedCallback, AceTypeAccessDeniedCallback, AceTypeSystemAuditCallback, AceTypeSystemAlarmCallback:
 		ace.ObjectAce = NewBasicAce(buf, ace.Header.Size)
@@ -21,6 +22,7 @@ func NewAce(buf *bytes.Buffer) ACE {
 	return ace
 }
 
+// NewACEHeader is a constructor that will parse out an ACEHeader from a byte buffer
 func NewACEHeader(buf *bytes.Buffer) ACEHeader {
 	header := ACEHeader{}
 	binary.Read(buf, binary.LittleEndian, &header.Type)
@@ -29,6 +31,7 @@ func NewACEHeader(buf *bytes.Buffer) ACEHeader {
 	return header
 }
 
+// NewBasicAce is a constructor that will parse out an Basic from a byte buffer
 func NewBasicAce(buf *bytes.Buffer, totalSize uint16) BasicAce {
 	oa := BasicAce{}
 
@@ -40,16 +43,17 @@ func NewBasicAce(buf *bytes.Buffer, totalSize uint16) BasicAce {
 	return oa
 }
 
+// NewAdvancedAce is a constructor that will parse out an AdvancedAce from a byte buffer
 func NewAdvancedAce(buf *bytes.Buffer, totalSize uint16) AdvancedAce {
 	oa := AdvancedAce{}
 	binary.Read(buf, binary.LittleEndian, &oa.Flags)
 	offset := 12
-	if (oa.Flags & uint32(ACEInheritanceFlagsObjectTypePresent)) != 0 {
+	if (oa.Flags & (ACEInheritanceFlagsObjectTypePresent)) != 0 {
 		oa.ObjectType = NewGUID(buf)
 		offset += 16
 	}
 
-	if (oa.Flags & uint32(ACEInheritanceFlagsInheritedObjectTypePresent)) != 0 {
+	if (oa.Flags & (ACEInheritanceFlagsInheritedObjectTypePresent)) != 0 {
 		oa.InheritedObjectType = NewGUID(buf)
 		offset += 16
 	}
