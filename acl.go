@@ -55,6 +55,7 @@ func NewACL(buf *bytes.Buffer) (acl ACL, err error) {
 	acl.Aces = make([]ACE, 0, acl.Header.AceCount)
 
 	for i := 0; i < int(acl.Header.AceCount); i++ {
+		// TODO
 		ace, err := NewAce(buf)
 		if err != nil {
 			return acl, err

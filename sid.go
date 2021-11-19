@@ -161,8 +161,9 @@ func NewSID(buf *bytes.Buffer, sidLength int) (SID, error) {
 		return sid, SIDInvalidError{"invalid SID revision"}
 	} else if numAuth := data[1]; numAuth > 15 {
 		return sid, SIDInvalidError{"invalid number of subauthorities"}
-	} else if ((int(numAuth) * 4) + 8) < len(data) {
-		return sid, SIDInvalidError{"invalid SID length"}
+		// }
+		// else if ((int(numAuth)*4)+8) < len(data) && !isCapabilitySID(data) {
+		// 	return sid, SIDInvalidError{"invalid SID length"}
 	} else {
 		authority := data[2:8]
 		subAuth := make([]uint32, numAuth)
