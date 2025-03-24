@@ -140,20 +140,6 @@ func main() {
 go get github.com/audibleblink/go-winacl
 ```
 
-## Contributing
-
-Contributions are welcome! Here are some areas that could benefit from additional work:
-
-- Additional test coverage, especially for inheritance functions
-- Implementation of SACL parsing and auditing support
-- Support for conditional ACEs
-- Improved documentation and examples
-- Performance optimizations for large ACLs
-
-## License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
 ## Credits
 
 This repo was forked from https://github.com/rvazarkar/go-winacl, who did the initial work of implementing the models and parsers. It has been significantly enhanced with additional Windows security features.
