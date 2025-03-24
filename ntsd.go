@@ -30,7 +30,7 @@ func (s NtSecurityDescriptor) String() string {
 // NtSecurityDescriptor from a byte buffer
 func NewNtSecurityDescriptor(ntsdBytes []byte) (NtSecurityDescriptor, error) {
 	// Use bytes.NewReader which is more efficient for sequential reads
-	var buf = bytes.NewBuffer(ntsdBytes)
+	buf := bytes.NewBuffer(ntsdBytes)
 	var err error
 
 	ntsd := NtSecurityDescriptor{}
