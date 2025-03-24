@@ -16,7 +16,7 @@ type GUID struct {
 
 const nullGUID = "00000000-0000-0000-0000-000000000000"
 
-// NewGUID is a constructor that will parse out a GUID from a byte buffer
+// NewGUID creates a GUID from a byte buffer
 func NewGUID(buf *bytes.Buffer) (guid GUID, err error) {
 	err = binary.Read(buf, binary.LittleEndian, &guid.Data1)
 	if err != nil {
@@ -31,6 +31,9 @@ func NewGUID(buf *bytes.Buffer) (guid GUID, err error) {
 		return
 	}
 	err = binary.Read(buf, binary.LittleEndian, &guid.Data4)
+	if err != nil {
+		return
+	}
 	return
 }
 
@@ -60,7 +63,7 @@ func (g GUID) Resolve() string {
 	return guid
 }
 
-// GUIDS is a map of all known pre-existing guids
+// GUIDS maps GUID strings to their human-readable names
 var GUIDS = map[string]string{
 	// Control Rights
 	// # https://docs.microsoft.com/en-us/openspecs/windows_protocols/ms-adts/1522b774-6464-41a3-87a5-1e5633c3fbbb

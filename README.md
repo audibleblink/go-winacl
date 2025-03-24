@@ -8,7 +8,7 @@ package main
 import (
 	"fmt"
 	"os"
-	winacl "github.com/kgoins/go-winacl/pkg"
+	"github.com/audibleblink/go-winacl"
 )
 
 func main() {
@@ -19,4 +19,5 @@ func main() {
 ```
 
 ## Credit
+
 This repo was forked from https://github.com/rvazarkar/go-winacl, who did the hard work of figuring out the models and parsers.

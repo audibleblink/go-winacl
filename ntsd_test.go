@@ -3,12 +3,12 @@ package winacl_test
 import (
 	"testing"
 
-	winacl "github.com/kgoins/go-winacl/pkg"
 	"github.com/stretchr/testify/require"
+
+	"github.com/audibleblink/go-winacl"
 )
 
 func TestNewNtSecurityDescriptor(t *testing.T) {
-
 	r := require.New(t)
 
 	t.Run("Creates a new Security Descriptor from a byte slice", func(t *testing.T) {
@@ -28,7 +28,22 @@ func TestNewNtSecurityDescriptor(t *testing.T) {
 		_, err := winacl.NewNtSecurityDescriptor(ntsdBytes)
 		r.Error(err)
 	})
+}
 
+func TestNtSecurityDescriptorString(t *testing.T) {
+	r := require.New(t)
+
+	t.Run("Returns formatted string representation", func(t *testing.T) {
+		ntsd := newTestSD()
+		
+		result := ntsd.String()
+		r.Contains(result, "Parsed Security Descriptor:")
+		r.Contains(result, "Offsets:")
+		r.Contains(result, "Owner=")
+		r.Contains(result, "Group=")
+		r.Contains(result, "Sacl=")
+		r.Contains(result, "Dacl=")
+	})
 }
 
 func TestToSDDL(t *testing.T) {
@@ -39,7 +54,3 @@ func TestToSDDL(t *testing.T) {
 		r.Equal(sddl, ntsd.ToSDDL())
 	})
 }
-
-// t.Run("",func(t *testing.T){
-//
-// })

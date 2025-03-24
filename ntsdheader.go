@@ -3,6 +3,7 @@ package winacl
 import (
 	"bytes"
 	"encoding/binary"
+	"fmt"
 )
 
 // NtSecurityDescriptorHeader is the Header of a Security Descriptor
@@ -26,33 +27,10 @@ const (
 // NewNTSDHeader is a constructor that will parse out an
 // NtSecurityDescriptorHeader from a byte buffer
 func NewNTSDHeader(buf *bytes.Buffer) (header NtSecurityDescriptorHeader, err error) {
-	err = binary.Read(buf, binary.LittleEndian, &header.Revision)
+	// Use a single binary.Read call for the entire struct
+	err = binary.Read(buf, binary.LittleEndian, &header)
 	if err != nil {
-		return
+		return header, fmt.Errorf("reading NTSD header: %w", err)
 	}
-	err = binary.Read(buf, binary.LittleEndian, &header.Sbz1)
-	if err != nil {
-		return
-	}
-	err = binary.Read(buf, binary.LittleEndian, &header.Control)
-	if err != nil {
-		return
-	}
-	err = binary.Read(buf, binary.LittleEndian, &header.OffsetOwner)
-	if err != nil {
-		return
-	}
-	err = binary.Read(buf, binary.LittleEndian, &header.OffsetGroup)
-	if err != nil {
-		return
-	}
-	err = binary.Read(buf, binary.LittleEndian, &header.OffsetSacl)
-	if err != nil {
-		return
-	}
-	err = binary.Read(buf, binary.LittleEndian, &header.OffsetDacl)
-	if err != nil {
-		return
-	}
-	return
+	return header, nil
 }

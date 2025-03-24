@@ -29,33 +29,43 @@ func (s NtSecurityDescriptor) String() string {
 // NewNtSecurityDescriptor is a constructor that will parse out an
 // NtSecurityDescriptor from a byte buffer
 func NewNtSecurityDescriptor(ntsdBytes []byte) (NtSecurityDescriptor, error) {
+	// Use bytes.NewReader which is more efficient for sequential reads
 	var buf = bytes.NewBuffer(ntsdBytes)
 	var err error
 
 	ntsd := NtSecurityDescriptor{}
 	ntsd.Header, err = NewNTSDHeader(buf)
 	if err != nil {
-		return ntsd, err
+		return ntsd, fmt.Errorf("parsing security descriptor header: %w", err)
 	}
 
 	ntsd.DACL, err = NewACL(buf)
 	if err != nil {
-		return ntsd, err
+		return ntsd, fmt.Errorf("parsing DACL: %w", err)
 	}
 
 	sidSize := ntsd.Header.OffsetGroup - ntsd.Header.OffsetOwner
 
-	// it seems that sometimes the owner and group are at the front of the bytes
-	// stream as well as being part of the first ACE. or something like that...
+	// It seems that sometimes the owner and group are at the front of the bytes
+	// stream as well as being part of the first ACE
 	if sidSize == 0 {
-		ntsd.Owner = ntsd.DACL.Aces[0].ObjectAce.GetPrincipal()
-		ntsd.Group = ntsd.DACL.Aces[0].ObjectAce.GetPrincipal()
+		// Check if there are any ACEs before accessing
+		if len(ntsd.DACL.Aces) > 0 {
+			ntsd.Owner = ntsd.DACL.Aces[0].ObjectAce.GetPrincipal()
+			ntsd.Group = ntsd.DACL.Aces[0].ObjectAce.GetPrincipal()
+		}
 		return ntsd, nil
 	}
+
 	ntsd.Owner, err = NewSID(buf, int(sidSize))
 	if err != nil {
-		return ntsd, err
+		return ntsd, fmt.Errorf("parsing owner SID: %w", err)
 	}
+
 	ntsd.Group, err = NewSID(buf, int(sidSize))
-	return ntsd, err
+	if err != nil {
+		return ntsd, fmt.Errorf("parsing group SID: %w", err)
+	}
+
+	return ntsd, nil
 }
