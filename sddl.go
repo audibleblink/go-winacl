@@ -152,7 +152,7 @@ var WellKnownSIDsSSDL = map[string]string{
 // in SDDL format
 func (s ACE) RightsString() string {
 	sb := strings.Builder{}
-	flags, _ := bamflags.ParseInt(int64(s.AccessMask.value))
+	flags, _ := bamflags.ParseInt(int64(s.AccessMask.Value))
 
 	for _, flag := range flags {
 		symbol := AceRightsSDDL[uint32(flag)]
@@ -176,7 +176,7 @@ func (s ACEHeader) SDDLFlags() string {
 // ToSDDL will convert the individual components of an ACD
 // into an SDDL compliant string
 //
-//https://docs.microsoft.com/en-us/windows/win32/secauthz/ace-strings
+// https://docs.microsoft.com/en-us/windows/win32/secauthz/ace-strings
 func (s ACE) ToSDDL() string {
 	format := "(%s;%s;%s;%s;%s;%s)"
 

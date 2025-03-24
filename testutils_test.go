@@ -6,11 +6,11 @@ import (
 	"os"
 	"path/filepath"
 
-	winacl "github.com/kgoins/go-winacl/pkg"
+	"github.com/audibleblink/go-winacl"
 )
 
 func getTestDataDir() string {
-	return "../testdata"
+	return "./testdata"
 }
 
 func getTestNtsdBytes() ([]byte, error) {

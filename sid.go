@@ -5,6 +5,7 @@ import (
 	"encoding/binary"
 	"fmt"
 	"regexp"
+	"strconv"
 	"strings"
 )
 
@@ -144,6 +145,10 @@ func (s SID) String() string {
 		return ""
 	}
 
+	// Pre-allocate the string builder to a reasonable size
+	// Typical SID has around 50 chars
+	sb.Grow(50)
+
 	fmt.Fprintf(&sb, "S-%v-%v", s.Revision, int(s.Authority[5]))
 	for i := 0; i < int(s.NumAuthorities); i++ {
 		fmt.Fprintf(&sb, "-%v", s.SubAuthorities[i])
@@ -157,50 +162,116 @@ func NewSID(buf *bytes.Buffer, sidLength int) (SID, error) {
 	sid := SID{}
 	data := buf.Next(sidLength)
 
-	if revision := data[0]; revision != 1 {
-		return sid, SIDInvalidError{"invalid SID revision"}
-	} else if numAuth := data[1]; numAuth > 15 {
-		return sid, SIDInvalidError{"invalid number of subauthorities"}
-	} else if ((int(numAuth) * 4) + 8) < len(data) {
-		return sid, SIDInvalidError{"invalid SID length"}
-	} else {
-		authority := data[2:8]
-		subAuth := make([]uint32, numAuth)
-		for i := 0; i < int(numAuth); i++ {
-			offset := 8 + (i * 4)
-			subAuth[i] = binary.LittleEndian.Uint32(data[offset : offset+4])
-		}
-
-		sid.Revision = revision
-		sid.Authority = authority
-		sid.NumAuthorities = numAuth
-		sid.SubAuthorities = subAuth
-
-		return sid, nil
+	// Validate buffer data before processing
+	if len(data) < 8 {  // At least need revision, numAuth, and authority
+		return sid, SIDInvalidError{"SID data too short"}
 	}
+
+	revision := data[0]
+	if revision != 1 {
+		return sid, SIDInvalidError{"invalid SID revision"}
+	}
+
+	numAuth := data[1]
+	if numAuth > 15 {
+		return sid, SIDInvalidError{"invalid number of subauthorities"}
+	}
+
+	// Validate there's enough data for all subauthorities
+	expectedLength := 8 + (int(numAuth) * 4)
+	if len(data) < expectedLength {
+		return sid, SIDInvalidError{"SID data too short for subauthorities"}
+	}
+
+	authority := data[2:8]
+	subAuth := make([]uint32, numAuth)
+	for i := 0; i < int(numAuth); i++ {
+		offset := 8 + (i * 4)
+		subAuth[i] = binary.LittleEndian.Uint32(data[offset : offset+4])
+	}
+
+	sid.Revision = revision
+	sid.Authority = authority
+	sid.NumAuthorities = numAuth
+	sid.SubAuthorities = subAuth
+
+	return sid, nil
+}
+
+// NewSIDFromString creates a SID from its string representation
+// Format: S-1-5-21-1234567890-1234567890-1234567890-1001
+func NewSIDFromString(sidStr string) (SID, error) {
+	parts := strings.Split(sidStr, "-")
+	if len(parts) < 3 {
+		return SID{}, SIDInvalidError{"invalid SID format"}
+	}
+	
+	// Verify S- prefix
+	if parts[0] != "S" {
+		return SID{}, SIDInvalidError{"SID must start with S-"}
+	}
+	
+	// Parse revision
+	revision, err := strconv.Atoi(parts[1])
+	if err != nil {
+		return SID{}, SIDInvalidError{"invalid revision"}
+	}
+	
+	// Parse authority
+	authority, err := strconv.Atoi(parts[2])
+	if err != nil {
+		return SID{}, SIDInvalidError{"invalid authority"}
+	}
+	
+	// Create authority byte array
+	authorityBytes := make([]byte, 6)
+	authorityBytes[5] = byte(authority) // Only using the last byte as that's how we print it
+	
+	// Parse sub-authorities
+	subAuthorities := make([]uint32, len(parts)-3)
+	for i := 3; i < len(parts); i++ {
+		val, err := strconv.ParseUint(parts[i], 10, 32)
+		if err != nil {
+			return SID{}, SIDInvalidError{fmt.Sprintf("invalid sub-authority at index %d", i-3)}
+		}
+		subAuthorities[i-3] = uint32(val)
+	}
+	
+	return SID{
+		Revision:       byte(revision),
+		NumAuthorities: byte(len(subAuthorities)),
+		Authority:      authorityBytes,
+		SubAuthorities: subAuthorities,
+	}, nil
 }
 
 // Resolve will return the human readable description of a SID
 // If one does not exist, it will return in the normal "S-!-" notation
 func (s SID) Resolve() string {
 	s1 := s.String()
-	resolved := WellKnownSIDs[s1]
-
-	if resolved == "" {
-		for pattern, name := range WellKnownSIDsRE {
-			match, _ := regexp.MatchString(pattern, s1)
-			if match {
-				return name
-			}
-		}
-	} else if resolved != "" {
+	
+	// First check direct matches in the map
+	if resolved, ok := WellKnownSIDs[s1]; ok {
 		return resolved
 	}
+
+	// Then check regex patterns
+	for pattern, name := range WellKnownSIDsRE {
+		match, err := regexp.MatchString(pattern, s1)
+		if err == nil && match {
+			return name
+		}
+	}
+	
 	return s1
 }
 
-type SIDInvalidError struct{ msg string }
+// SIDInvalidError represents errors that occur when parsing invalid SID data
+type SIDInvalidError struct{ 
+	msg string 
+}
 
+// Error implements the error interface for SIDInvalidError
 func (e SIDInvalidError) Error() string {
 	return fmt.Sprintf("NewSID: %s", e.msg)
 }

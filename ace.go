@@ -11,6 +11,7 @@ import (
 // https://docs.microsoft.com/en-us/windows/win32/secauthz/access-control-entries
 type AceType byte
 
+// ACE type constants
 const (
 	AceTypeAccessAllowed AceType = iota
 	AceTypeAccessDenied
@@ -31,7 +32,7 @@ const (
 	AceTypeSystemAlarmCallbackObject
 )
 
-// ACETypeLookup maps AceTypes to a human-readable labels
+// ACETypeLookup maps ACE types to human-readable strings
 var ACETypeLookup = map[AceType]string{
 	AceTypeAccessAllowed:               "ACCESS_ALLOWED",
 	AceTypeAccessDenied:                "ACCESS_DENIED",
@@ -52,9 +53,10 @@ var ACETypeLookup = map[AceType]string{
 	AceTypeSystemAlarmCallbackObject:   "SYSTEM_ALARM_CALLBACK_OBJECT",
 }
 
-// AceHeadFlags is a type representing an ACEs header
+// ACEHeaderFlags represents the flags in an ACE header
 type ACEHeaderFlags byte
 
+// ACE header flag constants
 const (
 	ACEHeaderFlagsObjectInheritAce        ACEHeaderFlags = 0x01
 	ACEHeaderFlagsContainerInheritAce                    = 0x02
@@ -65,6 +67,7 @@ const (
 	ACEHeaderFlagsFailedAccessAceFlag                    = 0x80
 )
 
+// ACEHeaderFlagLookup maps ACE header flags to human-readable strings
 var ACEHeaderFlagLookup = map[ACEHeaderFlags]string{
 	ACEHeaderFlagsObjectInheritAce:        "OBJECT_INHERIT_ACE",
 	ACEHeaderFlagsContainerInheritAce:     "CONTAINER_INHERIT_ACE",
@@ -91,9 +94,10 @@ var ACEInheritanceFlagsLookup = map[ACEInheritanceFlags]string{
 
 // ACEAccessMask represents an ACE's permissions
 type ACEAccessMask struct {
-	value uint32
+	Value uint32 // Changed from 'value' to 'Value' to make it exported
 }
 
+// Access mask constants for permissions
 const (
 	AccessMaskGenericRead    = 0x80000000
 	AccessMaskGenericWrite   = 0x40000000
@@ -119,7 +123,7 @@ const (
 	ADSRightDSCreateChild   = 0x00000001
 )
 
-// ACEAccessMaskLookup maps ACEAccessMasks to a human-readable labels
+// ACEAccessMaskLookup maps access masks to human-readable strings
 var ACEAccessMaskLookup = map[uint32]string{
 	AccessMaskGenericRead:    "GENERIC_READ",
 	AccessMaskGenericWrite:   "GENERIC_WRITE",
@@ -144,7 +148,7 @@ var ACEAccessMaskLookup = map[uint32]string{
 
 // Raw returns an ACEAccessMask's uint32 Access Mask
 func (am ACEAccessMask) Raw() uint32 {
-	return am.value
+	return am.Value // Updated to use the exported field name
 }
 
 // String returns an ACEAccessMask's human-readable Access Mask
@@ -157,7 +161,7 @@ func (am ACEAccessMask) String() string {
 // except as a slice of string
 func (am ACEAccessMask) StringSlice() []string {
 	var readableRights []string
-	rights, _ := bamflags.ParseInt(int64(am.value))
+	rights, _ := bamflags.ParseInt(int64(am.Value))
 
 	for _, right := range rights {
 		if perm := ACEAccessMaskLookup[uint32(right)]; perm != "" {
@@ -167,7 +171,7 @@ func (am ACEAccessMask) StringSlice() []string {
 	return readableRights
 }
 
-// ACE represents an ACE within an ACL
+// ACE represents an Access Control Entry
 type ACE struct {
 	//Header + AccessMask is 16 bytes
 	Header     ACEHeader
@@ -253,7 +257,7 @@ func (s BasicAce) GetPrincipal() SID {
 	return s.SecurityIdentifier
 }
 
-//AdvancedAce represents an Object Ace
+// AdvancedAce represents an Object Ace
 type AdvancedAce struct {
 	Flags               ACEInheritanceFlags //4 bytes
 	ObjectType          GUID                //16 bytes

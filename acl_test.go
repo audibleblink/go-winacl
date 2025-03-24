@@ -3,7 +3,7 @@ package winacl_test
 import (
 	"testing"
 
-	winacl "github.com/kgoins/go-winacl/pkg"
+	"github.com/audibleblink/go-winacl"
 	"github.com/stretchr/testify/require"
 )
 
